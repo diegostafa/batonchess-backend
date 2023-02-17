@@ -1,11 +1,14 @@
 CREATE TABLE users (
     u_id TEXT PRIMARY KEY,
-    u_name CHECK(LENGTH(pName) <= 100) NOT NULL DEFAULT 'anon'
+    u_name CHECK(LENGTH(u_name) <= 100) NOT NULL DEFAULT 'anon'
 );
 
 CREATE TABLE games (
     g_id TEXT PRIMARY KEY AUTOINCREMENT,
     fen TEXT NOT NULL,
+    -- minutes_per_side INTEGER NOT NULL,
+    -- seconds_increment_per_move INTEGER NOT NULL
+    max_players_per_side INTEGER NOT NULL,
     g_status TEXT CHECK(
         outcome IN (
             'NORMAL',
@@ -15,9 +18,6 @@ CREATE TABLE games (
             'INSUFF'
         )
     ) NOT NULL DEFAULT 'NORMAL',
-    max_players_per_side INTEGER NOT NULL,
-    minutes_per_side INTEGER NOT NULL,
-    seconds_increment_per_move INTEGER NOT NULL
 );
 
 CREATE TABLE game_players (

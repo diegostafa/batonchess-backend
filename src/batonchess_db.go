@@ -154,9 +154,9 @@ func UpdateUserName(updateInfo *UserNameUpdateRequest) bool {
 
 // --- GAME
 
-func CreateGame(user *User, gp *GameProps) bool {
+func CreateGame(gp *GameProps) bool {
 	return nil == queryNone(`
-		INSERT INTO games(g_id,fen,is_active,max_players,minutes_per_side, seconds_increment)
-		VALUES(DEFAULT, DEFAULT, DEFAULT,?,?,?)`,
-		gp.MaxPlayersPerSide, gp.MinutesPerSide, gp.SecondsIncrementPerMove)
+		INSERT INTO games(g_id,fen,is_active,max_players)
+		VALUES(DEFAULT, DEFAULT, DEFAULT,?)`,
+		gp.CreatorId)
 }

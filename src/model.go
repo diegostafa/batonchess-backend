@@ -11,10 +11,11 @@ type UserNameUpdateRequest struct {
 }
 
 type GameProps struct {
-	CreatorId               string `json:"id"`
-	MaxPlayersPerSide       int    `json:"maxPlayersPerSide"`
-	MinutesPerSide          int    `json:"minutesPerSide"`
-	SecondsIncrementPerMove int    `json:"secondsIncrementPerMove"`
+	CreatorId         string `json:"creatorId"`
+	MaxPlayersPerSide int    `json:"maxPlayersPerSide"`
+	PlayAsWhite       bool   `json:"playAsWhite"`
+	// SecondsIncrementPerMove int    `json:"secondsIncrementPerMove"`
+	// MinutesPerSide          int    `json:"minutesPerSide"`
 }
 
 type GameState struct {
