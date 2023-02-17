@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -18,7 +17,7 @@ var (
 // --- SETUP
 
 func setupDb() error {
-	data, err := ioutil.ReadFile(setupDbScript)
+	data, err := os.ReadFile(setupDbScript)
 	if err != nil {
 		return err
 	}
