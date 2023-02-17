@@ -1,7 +1,13 @@
 package main
 
+import (
+	"fmt"
+	"os"
+)
+
 func main() {
+	port := os.Args[1]
+
 	setupDb()
-	server := NewBatonChessServer()
-	server.listenOn("localhost:2023")
+	NewBatonChessServer().listenOn(fmt.Sprintf("localhost:%s", port))
 }

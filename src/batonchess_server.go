@@ -36,18 +36,21 @@ func bindEndpoints(router *gin.Engine) {
 }
 
 func createUser(c *gin.Context) {
-	id, err := uuid.NewRandom()
+	uuid, err := uuid.NewRandom()
 	if err != nil {
 		return
 	}
 
-	user := User{
-		Id:   id.String(),
-		Name: "anon",
+	if !InsertUser(uuid.String()) {
+		c.JSON(http.StatusInternalServerError, nil)
+		return
 	}
 
-	if err := InsertUser(&user); err != nil {
-		println(err.Error())
+	c.JSON(http.StatusAccepted, nil)
+
+	user, err := GetUser(uuid.String())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
 
@@ -64,7 +67,8 @@ func updateUserName(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, nil)
 		return
 	}
-	if err := UpdateUserName(&updateInfo); err != nil {
+
+	if !UpdateUserName(&updateInfo) {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}

@@ -7,14 +7,14 @@ type User struct {
 
 type UserNameUpdateRequest struct {
 	UserId      string `json:"userId"`
-	NewUsername string `json:"newUsername`
+	NewUsername string `json:"newUsername"`
 }
 
 type GameProps struct {
-	UserId            string `json:"id"`
-	MinsPerSide       int    `json:"minsPerSide"`
-	SecsIncremeent    int    `json:"secsIncrement"`
-	MaxPlayersPerSide int    `json:"maxPlayersPerSide"`
+	CreatorId               string `json:"id"`
+	MaxPlayersPerSide       int    `json:"maxPlayersPerSide"`
+	MinutesPerSide          int    `json:"minutesPerSide"`
+	SecondsIncrementPerMove int    `json:"secondsIncrementPerMove"`
 }
 
 type GameState struct {
