@@ -138,7 +138,6 @@ func GetUser(uuid string) (*User, error) {
 		return nil, err
 	}
 	return &user, nil
-
 }
 
 func InsertUser(uuid string) bool {
@@ -156,7 +155,34 @@ func UpdateUserName(updateInfo *UserNameUpdateRequest) bool {
 
 func CreateGame(gp *GameProps) bool {
 	return nil == queryNone(`
-		INSERT INTO games(g_id,fen,is_active,max_players)
+		INSERT INTO games(g_id,fen,state,max_players)
 		VALUES(DEFAULT, DEFAULT, DEFAULT,?)`,
 		gp.CreatorId)
+}
+
+func GetActiveGames() ([]Game, error) {
+	rows, err := queryMany(`SELECT * FROM games WHERE state = ?`, "NORMAL")
+	if err != nil {
+		return nil, err
+	}
+
+	if rows == nil {
+		return nil, nil
+	}
+
+	var games []Game
+	for rows.Next() {
+		var g Game
+		err := rows.Scan(&g.Id, &g.Fen, &g.MaxPlayers, &g.Status)
+		if err != nil {
+			return nil, err
+		}
+		games = append(games, g)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return games, nil
 }

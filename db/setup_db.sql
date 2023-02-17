@@ -9,7 +9,7 @@ CREATE TABLE games (
     -- minutes_per_side INTEGER NOT NULL,
     -- seconds_increment_per_move INTEGER NOT NULL
     max_players_per_side INTEGER NOT NULL,
-    g_status TEXT CHECK(
+    g_state TEXT CHECK(
         outcome IN (
             'NORMAL',
             'CHECKMATE',

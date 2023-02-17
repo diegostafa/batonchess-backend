@@ -77,6 +77,13 @@ func updateUserName(c *gin.Context) {
 }
 
 func getActiveGames(c *gin.Context) {
+	games, err := GetActiveGames()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, games)
 }
 
 func createGame(c *gin.Context) {

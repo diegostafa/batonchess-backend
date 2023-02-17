@@ -18,7 +18,9 @@ type GameProps struct {
 	// MinutesPerSide          int    `json:"minutesPerSide"`
 }
 
-type GameState struct {
-	Id    string `json:"id"`
-	State int    `json:"State"`
+type Game struct {
+	Id         string `json:"id"`
+	Fen        string `json:"fen"`
+	MaxPlayers int    `json:"maxPlayers"`
+	Status     string `json:"status"`
 }
