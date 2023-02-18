@@ -28,36 +28,31 @@ func bindEndpoints(router *gin.Engine) {
 	// users
 	router.GET("/createUser", createUser)
 	router.POST("/updateUserName/", updateUserName)
-	router.GET("/users/:id", getUserById)
+	router.POST("/isValidUser/", isValidUser)
 
 	// game
-	router.GET("/activeGames", getActiveGames)
-	router.POST("/createGame", createGame)
+	router.GET("/getActiveGames", getActiveGames)
+	router.POST("/createGame/", createGame)
 }
+
+// --- USER
 
 func createUser(c *gin.Context) {
 	uuid, err := uuid.NewRandom()
+
 	if err != nil {
 		return
 	}
 
-	if !InsertUser(uuid.String()) {
+	user := User{
+		Id:   uuid.String(),
+		Name: "anon",
+	}
+	if !InsertUser(&user) {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
-
-	c.JSON(http.StatusAccepted, nil)
-
-	user, err := GetUser(uuid.String())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, nil)
-		return
-	}
-
 	c.JSON(http.StatusCreated, user)
-}
-
-func getUserById(c *gin.Context) {
 }
 
 func updateUserName(c *gin.Context) {
@@ -76,8 +71,34 @@ func updateUserName(c *gin.Context) {
 	c.JSON(http.StatusAccepted, nil)
 }
 
+func isValidUser(c *gin.Context) {
+	var u UserId
+
+	if err := c.BindJSON(&u); err != nil {
+		c.JSON(http.StatusBadRequest, nil)
+		return
+	}
+
+	res, err := GetUser(&u)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+
+	if res == nil {
+		c.JSON(http.StatusNotFound, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
+}
+
+// --- GAME
+
 func getActiveGames(c *gin.Context) {
 	games, err := GetActiveGames()
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
@@ -87,4 +108,19 @@ func getActiveGames(c *gin.Context) {
 }
 
 func createGame(c *gin.Context) {
+	var gp GameProps
+
+	if err := c.BindJSON(&gp); err != nil {
+		c.JSON(http.StatusBadRequest, nil)
+		return
+	}
+
+	game, err := CreateGame(&gp)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+
+	c.JSON(http.StatusCreated, game)
 }

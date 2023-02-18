@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -11,22 +10,7 @@ import (
 var (
 	sqliteVersion = "sqlite3"
 	batonchessDb  = "./db/batonchess.db"
-	setupDbScript = "./db/setup_db.sql"
 )
-
-// --- SETUP
-
-func setupDb() error {
-	data, err := os.ReadFile(setupDbScript)
-	if err != nil {
-		return err
-	}
-
-	if _, err := os.Stat(batonchessDb); os.IsNotExist(err) {
-		return queryNone(string(data))
-	}
-	return nil
-}
 
 // --- DB
 
@@ -50,6 +34,7 @@ func queryNone(queryString string, queryArgs ...any) error {
 	defer stmt.Close()
 
 	_, err = stmt.Exec(queryArgs...)
+
 	if err != nil {
 		return fmt.Errorf("error executing query: %v", err)
 	}
@@ -122,8 +107,8 @@ func queryMany(queryString string, queryArgs ...any) (*sql.Rows, error) {
 
 // --- USER
 
-func GetUser(uuid string) (*User, error) {
-	row, err := queryOne(`SELECT * FROM users WHERE u_id = ?`, uuid)
+func GetUser(u *UserId) (*User, error) {
+	row, err := queryOne(`SELECT * FROM users WHERE u_id = ?`, u.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -140,8 +125,8 @@ func GetUser(uuid string) (*User, error) {
 	return &user, nil
 }
 
-func InsertUser(uuid string) bool {
-	return nil == queryNone(`INSERT INTO users(u_id, u_name) VALUES(?, DEFAULT)`, uuid)
+func InsertUser(user *User) bool {
+	return nil == queryNone(`INSERT INTO users(u_id, u_name) VALUES(?, ?)`, user.Id, user.Name)
 }
 
 func UpdateUserName(updateInfo *UserNameUpdateRequest) bool {
@@ -153,15 +138,23 @@ func UpdateUserName(updateInfo *UserNameUpdateRequest) bool {
 
 // --- GAME
 
-func CreateGame(gp *GameProps) bool {
-	return nil == queryNone(`
-		INSERT INTO games(g_id,fen,state,max_players)
-		VALUES(DEFAULT, DEFAULT, DEFAULT,?)`,
-		gp.CreatorId)
+func CreateGame(gp *GameProps) (int, error) {
+	err := queryNone(`
+		INSERT INTO games(g_id,creator_id,fen,state,max_players)
+		VALUES(DEFAULT,?,DEFAULT,DEFAULT,?)`,
+		gp.CreatorId, gp.MaxPlayersPerSide)
+
+	if err != nil {
+		return -1, err
+	}
+
+	return 0, nil
 }
 
+func GetUserActiveGame() {}
+
 func GetActiveGames() ([]Game, error) {
-	rows, err := queryMany(`SELECT * FROM games WHERE state = ?`, "NORMAL")
+	rows, err := queryMany(`SELECT * FROM games WHERE g_state = ?`, "NORMAL")
 	if err != nil {
 		return nil, err
 	}
