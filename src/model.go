@@ -1,21 +1,34 @@
 package main
 
+type UserId struct {
+	Id string `json:"id"`
+}
+
 type User struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
-type UserId struct {
-	Id string `json:"id"`
+type Player struct {
+	Id             string `json:"id"`
+	Name           string `json:"name"`
+	PlayingAsWhite bool   `json:"playingAsWhite"`
+}
+
+type UserNameUpdateRequest struct {
+	Id          string `json:"id"`
+	NewUsername string `json:"newUsername"`
 }
 
 type GameId struct {
 	Id int `json:"id"`
 }
 
-type UserNameUpdateRequest struct {
-	Id          string `json:"id"`
-	NewUsername string `json:"newUsername"`
+type GameState struct {
+	GameInfo  GameInfo `json:"gameInfo"`
+	Fen       string   `json:"fen"`
+	Players   []Player `json:"players"`
+	TurnQueue []UserId `json:"turnQueue"`
 }
 
 type GameProps struct {
@@ -32,9 +45,13 @@ type GameInfo struct {
 	CurrentPlayers int    `json:"currentPlayers"`
 }
 
-type GameState struct {
-	Id         string `json:"id"`
-	Fen        string `json:"fen"`
-	MaxPlayers int    `json:"maxPlayers"`
-	Status     string `json:"status"`
+type UsersInGamesId struct {
+	GameId int    `json:"gameId"`
+	UserId string `json:"userid"`
+}
+
+type JoinGameRequest struct {
+	GameId      int    `json:"gameId"`
+	UserId      string `json:"userid"`
+	PlayAsWhite bool   `json:"playAsWhite"`
 }

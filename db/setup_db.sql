@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS games (
     creator_id TEXT NOT NULL,
     fen TEXT NOT NULL,
     max_players INTEGER NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
+    created_at DATETIME NOT NULL DEFAULT(STRFTIME('%N', 'NOW')),
     CHECK(
         g_state IN (
             'NORMAL',
@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS games (
 CREATE TABLE IF NOT EXISTS users_in_games (
     game_id INTEGER NOT NULL,
     user_id TEXT NOT NULL,
-    is_playing BOOLEAN NOT NULL DEFAULT FALSE,
+    is_playing BOOLEAN NOT NULL,
+    play_as_white BOOLEAN NOT NULL,
     FOREIGN KEY (game_id) REFERENCES games(g_id),
     FOREIGN KEY (user_id) REFERENCES users(u_id)
 );

@@ -33,6 +33,8 @@ func bindEndpoints(router *gin.Engine) {
 	// game
 	router.GET("/getActiveGames", getActiveGames)
 	router.POST("/createGame", createGame)
+	router.POST("/joinGame", joinGame)
+	router.POST("/leaveGame", leaveGame)
 }
 
 // --- USER
@@ -48,7 +50,7 @@ func createUser(c *gin.Context) {
 		Id:   uuid.String(),
 		Name: "anon",
 	}
-	if !CreateUser(&user) {
+	if err := CreateUser(&user); err != nil {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
@@ -63,7 +65,7 @@ func updateUserName(c *gin.Context) {
 		return
 	}
 
-	if !UpdateUserName(&updateInfo) {
+	if err := UpdateUserName(&updateInfo); err != nil {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
@@ -108,14 +110,18 @@ func getActiveGames(c *gin.Context) {
 }
 
 func createGame(c *gin.Context) {
-	var gp GameProps
+	var (
+		gp   GameProps
+		game *GameInfo
+		err  error
+	)
 
 	if err := c.BindJSON(&gp); err != nil {
 		c.JSON(http.StatusBadRequest, nil)
 		return
 	}
 
-	game, err := CreateGame(&gp)
+	game, err = CreateGame(&gp)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, nil)
@@ -123,4 +129,46 @@ func createGame(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, game)
+}
+
+func joinGame(c *gin.Context) {
+	var (
+		joinRequest JoinGameRequest
+		gameState   *GameState
+		err         error
+	)
+
+	if err := c.BindJSON(&joinRequest); err != nil {
+		c.JSON(http.StatusBadRequest, nil)
+		return
+	}
+
+	if err := JoinGame(&joinRequest); err != nil {
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+
+	gameState, err = GetGameState(&GameId{Id: joinRequest.GameId})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gameState)
+}
+
+func leaveGame(c *gin.Context) {
+	var leaveRequest UsersInGamesId
+
+	if err := c.BindJSON(&leaveRequest); err != nil {
+		c.JSON(http.StatusBadRequest, nil)
+		return
+	}
+
+	if err := LeaveGame(&leaveRequest); err != nil {
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
 }
