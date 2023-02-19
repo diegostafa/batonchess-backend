@@ -9,18 +9,30 @@ type UserId struct {
 	Id string `json:"id"`
 }
 
+type GameId struct {
+	Id int `json:"id"`
+}
+
 type UserNameUpdateRequest struct {
-	UserId      string `json:"userId"`
+	Id          string `json:"id"`
 	NewUsername string `json:"newUsername"`
 }
 
 type GameProps struct {
-	CreatorId         string `json:"creatorId"`
-	MaxPlayersPerSide int    `json:"maxPlayersPerSide"`
-	PlayAsWhite       bool   `json:"playAsWhite"`
+	CreatorId  string `json:"creatorId"`
+	MaxPlayers int    `json:"maxPlayers"`
 }
 
-type Game struct {
+type GameInfo struct {
+	GameId         int    `json:"gameId"`
+	CreatorName    string `json:"creatorName"`
+	GameStatus     string `json:"gameStatus"`
+	CreatedAt      string `json:"createdAt"`
+	MaxPlayers     int    `json:"maxPlayers"`
+	CurrentPlayers int    `json:"currentPlayers"`
+}
+
+type GameState struct {
 	Id         string `json:"id"`
 	Fen        string `json:"fen"`
 	MaxPlayers int    `json:"maxPlayers"`

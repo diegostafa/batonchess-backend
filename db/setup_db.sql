@@ -5,10 +5,11 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS games (
     g_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    g_state TEXT NOT NULL DEFAULT 'NORMAL',
     creator_id TEXT NOT NULL,
     fen TEXT NOT NULL,
-    max_players_per_side INTEGER NOT NULL,
-    g_state TEXT NOT NULL DEFAULT 'NORMAL',
+    max_players INTEGER NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
     CHECK(
         g_state IN (
             'NORMAL',
@@ -21,36 +22,10 @@ CREATE TABLE IF NOT EXISTS games (
     FOREIGN KEY (creator_id) REFERENCES users(u_id)
 );
 
-CREATE TABLE IF NOT EXISTS game_players (
-    user_id TEXT NOT NULL,
+CREATE TABLE IF NOT EXISTS users_in_games (
     game_id INTEGER NOT NULL,
+    user_id TEXT NOT NULL,
+    is_playing BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (game_id) REFERENCES games(g_id),
     FOREIGN KEY (user_id) REFERENCES users(u_id)
 );
-
-/*
- 
- create game
- insert (game id, info, creator)
- return last
- 
- 
- user_id
- game_props
- 
- games.add(auto_id, creator, props...)
- id = select.where creator=user_id and active
- 
- user.games
- return id
- 
- ....
- 
- game_id, user_id, join
- game_players.add(user_id, game_id, side)
- return select fen where game id = gid
- 
- ...
- 
- 
- */

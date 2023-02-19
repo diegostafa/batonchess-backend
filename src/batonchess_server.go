@@ -27,12 +27,12 @@ func (bc *BatonChessServer) listenOn(addr string) {
 func bindEndpoints(router *gin.Engine) {
 	// users
 	router.GET("/createUser", createUser)
-	router.POST("/updateUserName/", updateUserName)
-	router.POST("/isValidUser/", isValidUser)
+	router.POST("/updateUserName", updateUserName)
+	router.POST("/isValidUser", isValidUser)
 
 	// game
 	router.GET("/getActiveGames", getActiveGames)
-	router.POST("/createGame/", createGame)
+	router.POST("/createGame", createGame)
 }
 
 // --- USER
@@ -48,7 +48,7 @@ func createUser(c *gin.Context) {
 		Id:   uuid.String(),
 		Name: "anon",
 	}
-	if !InsertUser(&user) {
+	if !CreateUser(&user) {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
