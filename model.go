@@ -1,4 +1,4 @@
-package batonchess
+package main
 
 type UserId struct {
 	Id string `json:"id"`
@@ -25,7 +25,6 @@ type GameId struct {
 }
 
 type GameState struct {
-	GameInfo  GameInfo `json:"gameInfo"`
 	Fen       string   `json:"fen"`
 	Players   []Player `json:"players"`
 	TurnQueue []UserId `json:"turnQueue"`

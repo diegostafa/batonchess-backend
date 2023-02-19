@@ -1,4 +1,4 @@
-package batonchess
+package main
 
 import (
 	"fmt"

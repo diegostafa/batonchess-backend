@@ -7,4 +7,4 @@ clean:
 	sqlite3 $(batonchess_db) < $(setup_db)
 
 run:
-	go run src/*.go ${server_port}
+	go run *.go ${server_port}

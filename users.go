@@ -1,12 +1,10 @@
-package batonchess
+package main
 
 import (
 	"database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
 )
-
-// --- USER
 
 func GetUser(u *UserId) (*User, error) {
 	var (
@@ -17,12 +15,9 @@ func GetUser(u *UserId) (*User, error) {
 		func(row *sql.Row) error {
 			return row.Scan(&user.Id, &user.Name)
 		}, `
-		SELECT
-			*
-		FROM
-			users
-		WHERE
-			u_id = ?`,
+		SELECT *
+		FROM users
+		WHERE u_id = ?`,
 		u.Id)
 
 	if err != nil {
@@ -34,21 +29,16 @@ func GetUser(u *UserId) (*User, error) {
 
 func CreateUser(user *User) error {
 	return queryNone(`
-		INSERT INTO
-			users(u_id, u_name)
-		VALUES
-			(?, ?)`,
+		INSERT INTO users(u_id, u_name)
+		VALUES (?, ?)`,
 		user.Id, user.Name)
 }
 
 func UpdateUserName(updateInfo *UserNameUpdateRequest) error {
 	return queryNone(`
-		UPDATE
-			users
-		SET
-			u_name= ?
-		WHERE
-			u_id = ?`,
+		UPDATE users
+		SET u_name= ?
+		WHERE u_id = ?`,
 		updateInfo.NewUsername, updateInfo.Id,
 	)
 }

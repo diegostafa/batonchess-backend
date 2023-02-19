@@ -1,4 +1,4 @@
-package batonchess
+package main
 
 import (
 	"net/http"
@@ -153,6 +153,8 @@ func joinGame(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
+
+	println("GOT GAME STATE")
 
 	c.JSON(http.StatusAccepted, gameState)
 }

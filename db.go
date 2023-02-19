@@ -1,4 +1,4 @@
-package batonchess
+package main
 
 import (
 	"database/sql"
@@ -11,8 +11,6 @@ var (
 	sqliteVersion = "sqlite3"
 	batonchessDb  = "./db/batonchess.db"
 )
-
-// --- DB
 
 func queryNone(queryString string, queryArgs ...any) error {
 	db, err := sql.Open(sqliteVersion, batonchessDb)
