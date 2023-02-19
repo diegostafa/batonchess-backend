@@ -1,4 +1,4 @@
-package model
+package batonchess
 
 type UserId struct {
 	Id string `json:"id"`

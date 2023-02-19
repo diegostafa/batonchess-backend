@@ -1,4 +1,4 @@
-package batonchessServer
+package batonchess
 
 import (
 	"net/http"

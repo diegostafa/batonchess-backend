@@ -1,4 +1,4 @@
-package batonchessDb
+package batonchess
 
 import (
 	"database/sql"
