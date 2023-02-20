@@ -224,8 +224,8 @@ func GetGameState(gameId *GameId) (*GameState, error) {
 
 	gameState = &GameState{}
 	gameState.Players = players
-	gameState.Fen = "fen"
-	gameState.UserIdTurn = "il diocan"
+	gameState.Fen = "TODO"
+	gameState.UserIdTurn = "TODO"
 
 	return gameState, nil
 }
