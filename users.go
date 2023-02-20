@@ -34,11 +34,11 @@ func CreateUser(user *User) error {
 		user.Id, user.Name)
 }
 
-func UpdateUserName(updateInfo *UserNameUpdateRequest) error {
+func UpdateUserName(updateInfo *UpdateUsernameRequest) error {
 	return queryNone(`
 		UPDATE users
-		SET u_name= ?
+		SET u_name = ?
 		WHERE u_id = ?`,
-		updateInfo.NewUsername, updateInfo.Id,
+		updateInfo.NewName, updateInfo.Id,
 	)
 }

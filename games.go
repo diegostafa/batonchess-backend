@@ -6,8 +6,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func CreateGame(gp *GameProps) (*GameInfo, error) {
-	println("CREATEGAME")
+func CreateGame(gp *CreateGameRequest) (*GameInfo, error) {
 	var (
 		gameInfo GameInfo
 		err      error
@@ -35,12 +34,12 @@ func CreateGame(gp *GameProps) (*GameInfo, error) {
 		},
 		`
 		SELECT
-			g_id,
-			u_name,
-			g_state,
-			created_at,
-			max_players,
-			COUNT(users_in_games.user_id) AS current_players
+		g_id,
+		u_name,
+		g_state,
+		created_at,
+		max_players,
+		COUNT(users_in_games.user_id) AS current_players
 		FROM users_in_games RIGHT JOIN
 		(
 			SELECT *
@@ -49,8 +48,8 @@ func CreateGame(gp *GameProps) (*GameInfo, error) {
 			WHERE creator_id = ?
 			ORDER BY created_at DESC
 			LIMIT 1
-		) AS game_info
-		ON game_id = game_info.g_id
+			) AS game_info
+			ON game_id = game_info.g_id
 		GROUP BY game_info.g_id
 		`, gp.CreatorId)
 
@@ -168,18 +167,18 @@ func LeaveGame(leaveRequest *UsersInGamesId) error {
 	)
 }
 
-func GetGamePlayers(gameId *GameId) ([]Player, error) {
+func GetGamePlayers(gameId *GameId) ([]UserPlayer, error) {
 	println("GETGAMEPLAYERS")
 
 	var (
-		players []Player
+		players []UserPlayer
 		err     error
 	)
 
 	err = queryMany(
 		func(rows *sql.Rows) error {
 			for rows.Next() {
-				var p Player
+				var p UserPlayer
 				err := rows.Scan(
 					&p.Id,
 					&p.Name,
@@ -214,7 +213,7 @@ func GetGameState(gameId *GameId) (*GameState, error) {
 	println("GETGAMESTATE")
 	var (
 		gameState *GameState
-		players   []Player
+		players   []UserPlayer
 		err       error
 	)
 
@@ -225,6 +224,8 @@ func GetGameState(gameId *GameId) (*GameState, error) {
 
 	gameState = &GameState{}
 	gameState.Players = players
+	gameState.Fen = "fen"
+	gameState.UserIdTurn = "il diocan"
 
 	return gameState, nil
 }

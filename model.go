@@ -9,15 +9,15 @@ type User struct {
 	Name string `json:"name"`
 }
 
-type Player struct {
+type UserPlayer struct {
 	Id             string `json:"id"`
 	Name           string `json:"name"`
 	PlayingAsWhite bool   `json:"playingAsWhite"`
 }
 
-type UserNameUpdateRequest struct {
-	Id          string `json:"id"`
-	NewUsername string `json:"newUsername"`
+type UpdateUsernameRequest struct {
+	Id      string `json:"id"`
+	NewName string `json:"newName"`
 }
 
 type GameId struct {
@@ -25,12 +25,12 @@ type GameId struct {
 }
 
 type GameState struct {
-	Fen       string   `json:"fen"`
-	Players   []Player `json:"players"`
-	TurnQueue []UserId `json:"turnQueue"`
+	Fen        string       `json:"fen"`
+	UserIdTurn string       `json:"userIdTurn"`
+	Players    []UserPlayer `json:"players"`
 }
 
-type GameProps struct {
+type CreateGameRequest struct {
 	CreatorId  string `json:"creatorId"`
 	MaxPlayers int    `json:"maxPlayers"`
 }

@@ -58,7 +58,7 @@ func createUser(c *gin.Context) {
 }
 
 func updateUserName(c *gin.Context) {
-	var updateInfo UserNameUpdateRequest
+	var updateInfo UpdateUsernameRequest
 
 	if err := c.BindJSON(&updateInfo); err != nil {
 		c.JSON(http.StatusBadRequest, nil)
@@ -111,7 +111,7 @@ func getActiveGames(c *gin.Context) {
 
 func createGame(c *gin.Context) {
 	var (
-		gp   GameProps
+		gp   CreateGameRequest
 		game *GameInfo
 		err  error
 	)
@@ -153,8 +153,6 @@ func joinGame(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
-
-	println("GOT GAME STATE")
 
 	c.JSON(http.StatusAccepted, gameState)
 }
