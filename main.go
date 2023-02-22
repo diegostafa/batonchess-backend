@@ -4,9 +4,11 @@ import (
 	"fmt"
 )
 
-const addr = "localhost"
-const http_port = "2023"
-const tcp_port = "2024"
+const (
+	addr      = "localhost"
+	http_port = "2023"
+	tcp_port  = "2024"
+)
 
 func main() {
 	go BatonChessHttp(fmt.Sprintf("%s:%s", addr, http_port))

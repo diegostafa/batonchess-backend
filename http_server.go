@@ -8,6 +8,7 @@ import (
 )
 
 func BatonChessHttp(addr string) {
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	bindEndpoints(router)
 	router.Run(addr)

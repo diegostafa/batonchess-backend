@@ -1,5 +1,7 @@
 package main
 
+// --- HTTP SERVER
+
 type UserId struct {
 	Id string `json:"id"`
 }
@@ -44,12 +46,25 @@ type GameInfo struct {
 	CurrentPlayers int    `json:"currentPlayers"`
 }
 
-type UsersInGamesId struct {
-	GameId int    `json:"gameId"`
-	UserId string `json:"userid"`
+// --- TCP SERVER
+
+const (
+	JoinGameAction string = "join_game"
+	MakeMoveAction string = "make_move"
+)
+
+type BatonchessTcpAction struct {
+	ActionType string      `json:"actionType"`
+	ActionBody interface{} `json:"actionBody"`
 }
 
-type JoinGameRequest struct {
+type JoinGameTcpRequest struct {
+	GameId      int    `json:"gameId"`
+	UserId      string `json:"userid"`
+	PlayAsWhite bool   `json:"playAsWhite"`
+}
+
+type MakeMoveTcpRequest struct {
 	GameId      int    `json:"gameId"`
 	UserId      string `json:"userid"`
 	PlayAsWhite bool   `json:"playAsWhite"`
