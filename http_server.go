@@ -7,21 +7,10 @@ import (
 	"github.com/google/uuid"
 )
 
-type BatonChessServer struct {
-	router *gin.Engine
-}
-
-func NewBatonChessServer() *BatonChessServer {
+func BatonChessHttp(addr string) {
 	router := gin.Default()
 	bindEndpoints(router)
-
-	return &BatonChessServer{
-		router: router,
-	}
-}
-
-func (bc *BatonChessServer) listenOn(addr string) {
-	bc.router.Run(addr)
+	router.Run(addr)
 }
 
 func bindEndpoints(router *gin.Engine) {
@@ -33,8 +22,6 @@ func bindEndpoints(router *gin.Engine) {
 	// game
 	router.GET("/getActiveGames", getActiveGames)
 	router.POST("/createGame", createGame)
-	router.POST("/joinGame", joinGame)
-	router.POST("/leaveGame", leaveGame)
 }
 
 // --- USER
@@ -84,6 +71,7 @@ func isValidUser(c *gin.Context) {
 	res, err := GetUser(&u)
 
 	if err != nil {
+		println(err.Error())
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
@@ -111,9 +99,9 @@ func getActiveGames(c *gin.Context) {
 
 func createGame(c *gin.Context) {
 	var (
-		gp   CreateGameRequest
-		game *GameInfo
-		err  error
+		gp       CreateGameRequest
+		gameInfo *GameInfo
+		err      error
 	)
 
 	if err := c.BindJSON(&gp); err != nil {
@@ -121,54 +109,12 @@ func createGame(c *gin.Context) {
 		return
 	}
 
-	game, err = CreateGame(&gp)
+	gameInfo, err = CreateGame(&gp)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
 
-	c.JSON(http.StatusCreated, game)
-}
-
-func joinGame(c *gin.Context) {
-	var (
-		joinRequest JoinGameRequest
-		gameState   *GameState
-		err         error
-	)
-
-	if err := c.BindJSON(&joinRequest); err != nil {
-		c.JSON(http.StatusBadRequest, nil)
-		return
-	}
-
-	if err := JoinGame(&joinRequest); err != nil {
-		c.JSON(http.StatusInternalServerError, nil)
-		return
-	}
-
-	gameState, err = GetGameState(&GameId{Id: joinRequest.GameId})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, nil)
-		return
-	}
-
-	c.JSON(http.StatusAccepted, gameState)
-}
-
-func leaveGame(c *gin.Context) {
-	var leaveRequest UsersInGamesId
-
-	if err := c.BindJSON(&leaveRequest); err != nil {
-		c.JSON(http.StatusBadRequest, nil)
-		return
-	}
-
-	if err := LeaveGame(&leaveRequest); err != nil {
-		c.JSON(http.StatusInternalServerError, nil)
-		return
-	}
-
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusCreated, gameInfo)
 }

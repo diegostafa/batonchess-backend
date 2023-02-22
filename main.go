@@ -2,10 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
 )
 
+const addr = "localhost"
+const http_port = "2023"
+const tcp_port = "2024"
+
 func main() {
-	port := os.Args[1]
-	NewBatonChessServer().listenOn(fmt.Sprintf("localhost:%s", port))
+	go BatonChessHttp(fmt.Sprintf("%s:%s", addr, http_port))
+	go BatonChessTcp(fmt.Sprintf("%s:%s", addr, tcp_port))
+	select {}
 }

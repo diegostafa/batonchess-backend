@@ -21,12 +21,3 @@ CREATE TABLE IF NOT EXISTS games (
     ),
     FOREIGN KEY (creator_id) REFERENCES users(u_id)
 );
-
-CREATE TABLE IF NOT EXISTS users_in_games (
-    game_id INTEGER NOT NULL,
-    user_id TEXT NOT NULL,
-    is_playing BOOLEAN NOT NULL,
-    play_as_white BOOLEAN NOT NULL,
-    FOREIGN KEY (game_id) REFERENCES games(g_id),
-    FOREIGN KEY (user_id) REFERENCES users(u_id)
-);
