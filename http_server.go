@@ -7,22 +7,19 @@ import (
 	"github.com/google/uuid"
 )
 
-func BatonChessHttp(addr string) {
+func BatonChessHttp(addr string, be *BatonchessEngine) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	bindEndpoints(router)
+	bindEndpoints(router, be)
 	router.Run(addr)
 }
 
-func bindEndpoints(router *gin.Engine) {
-	// users
+func bindEndpoints(router *gin.Engine, be *BatonchessEngine) {
 	router.GET("/createUser", createUser)
 	router.POST("/updateUserName", updateUserName)
 	router.POST("/isValidUser", isValidUser)
-
-	// game
-	router.GET("/getActiveGames", getActiveGames)
-	router.POST("/createGame", createGame)
+	router.GET("/getActiveGames", getActiveGamesClosure(be))
+	router.POST("/createGame", createGameClosure(be))
 }
 
 // --- USER
@@ -87,35 +84,50 @@ func isValidUser(c *gin.Context) {
 
 // --- GAME
 
-func getActiveGames(c *gin.Context) {
-	games, err := GetActiveGames()
+func getActiveGamesClosure(be *BatonchessEngine) func(*gin.Context) {
+	return func(c *gin.Context) {
+		gameInfos, err := GetActiveGames()
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, nil)
-		return
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, nil)
+			return
+		}
+
+		gamesInMemory := make([]GameInfo, 0, len(gameInfos))
+		for _, value := range gameInfos {
+			if _, ok := be.games[value.GameId]; ok {
+				gamesInMemory = append(gamesInMemory, value)
+			}
+		}
+
+		c.JSON(http.StatusOK, gamesInMemory)
 	}
-
-	c.JSON(http.StatusOK, games)
 }
 
-func createGame(c *gin.Context) {
-	var (
-		gp       CreateGameRequest
-		gameInfo *GameInfo
-		err      error
-	)
+func createGameClosure(be *BatonchessEngine) func(*gin.Context) {
+	return func(c *gin.Context) {
+		var (
+			gp       CreateGameRequest
+			gameInfo *GameInfo
+			err      error
+		)
 
-	if err := c.BindJSON(&gp); err != nil {
-		c.JSON(http.StatusBadRequest, nil)
-		return
+		if err := c.BindJSON(&gp); err != nil {
+			c.JSON(http.StatusBadRequest, nil)
+			return
+		}
+
+		gameInfo, err = CreateGame(&gp)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, nil)
+			return
+		}
+
+		gid := &GameId{Id: gameInfo.GameId}
+		be.createGame(gid)
+		gameInfo.CurrentPlayers = len(be.games[gid.Id].playersTcp)
+
+		c.JSON(http.StatusCreated, gameInfo)
 	}
-
-	gameInfo, err = CreateGame(&gp)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, nil)
-		return
-	}
-
-	c.JSON(http.StatusCreated, gameInfo)
 }

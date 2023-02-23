@@ -17,6 +17,15 @@ type UserPlayer struct {
 	PlayingAsWhite bool   `json:"playingAsWhite"`
 }
 
+type UserPlayerTcp struct {
+	ConnId string     `json:"connId"`
+	Player UserPlayer `json:"player"`
+}
+
+func (upt *UserPlayerTcp) toUserPlayer() *UserPlayer {
+	return &upt.Player
+}
+
 type UpdateUsernameRequest struct {
 	Id      string `json:"id"`
 	NewName string `json:"newName"`
@@ -27,9 +36,10 @@ type GameId struct {
 }
 
 type GameState struct {
-	Fen        string       `json:"fen"`
-	UserIdTurn string       `json:"userIdTurn"`
-	Players    []UserPlayer `json:"players"`
+	Fen               string       `json:"fen"`
+	Players           []UserPlayer `json:"players"`
+	UserIdTurn        string       `json:"userIdTurn"`
+	WaitingForPlayers bool         `json:"waitingForPlayers"`
 }
 
 type CreateGameRequest struct {
@@ -46,6 +56,18 @@ type GameInfo struct {
 	CurrentPlayers int    `json:"currentPlayers"`
 }
 
+// --- CHESS
+
+const (
+	initialFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+)
+
+type ChessMove struct {
+	from      string
+	to        string
+	promotion string
+}
+
 // --- TCP SERVER
 
 const (
@@ -58,14 +80,15 @@ type BatonchessTcpAction struct {
 	ActionBody interface{} `json:"actionBody"`
 }
 
-type JoinGameTcpRequest struct {
+type JoinGameRequest struct {
 	GameId      int    `json:"gameId"`
-	UserId      string `json:"userid"`
+	UserId      string `json:"userId"`
+	UserName    string `json:"userName"`
 	PlayAsWhite bool   `json:"playAsWhite"`
 }
 
-type MakeMoveTcpRequest struct {
-	GameId      int    `json:"gameId"`
-	UserId      string `json:"userid"`
-	PlayAsWhite bool   `json:"playAsWhite"`
+type MakeMoveRequest struct {
+	GameId     int        `json:"gameId"`
+	UserId     string     `json:"userId"`
+	MaxPlayers *ChessMove `json:"chessMove"`
 }

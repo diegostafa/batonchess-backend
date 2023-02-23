@@ -49,7 +49,6 @@ func CreateGame(gp *CreateGameRequest) (*GameInfo, error) {
 		println(err.Error())
 		return nil, err
 	}
-	gameInfo.CurrentPlayers = 112
 
 	return &gameInfo, nil
 }
