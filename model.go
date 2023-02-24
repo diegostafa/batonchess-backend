@@ -1,5 +1,13 @@
 package main
 
+const (
+	JOIN_GAME_ACTION       = "JOIN_GAME"
+	LEAVE_GAME_ACTION      = "LEAVE_GAME"
+	UPDATE_FEN_ACTION      = "UPDATE_FEN"
+	DISCARDED_MOVE_MESSAGE = "DISCARDED"
+	INITIAL_FEN            = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+)
+
 // --- HTTP SERVER
 
 type UserId struct {
@@ -38,7 +46,7 @@ type GameId struct {
 type GameState struct {
 	Fen               string       `json:"fen"`
 	Players           []UserPlayer `json:"players"`
-	UserIdTurn        string       `json:"userIdTurn"`
+	UserToPlay        UserPlayer   `json:"userToPlay"`
 	WaitingForPlayers bool         `json:"waitingForPlayers"`
 }
 
@@ -51,29 +59,12 @@ type GameInfo struct {
 	GameId         int    `json:"gameId"`
 	CreatorName    string `json:"creatorName"`
 	GameStatus     string `json:"gameStatus"`
-	CreatedAt      string `json:"createdAt"`
+	CreatedAt      int    `json:"createdAt"`
 	MaxPlayers     int    `json:"maxPlayers"`
 	CurrentPlayers int    `json:"currentPlayers"`
 }
 
-// --- CHESS
-
-const (
-	initialFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-)
-
-type ChessMove struct {
-	from      string
-	to        string
-	promotion string
-}
-
 // --- TCP SERVER
-
-const (
-	JoinGameAction string = "join_game"
-	MakeMoveAction string = "make_move"
-)
 
 type BatonchessTcpAction struct {
 	ActionType string      `json:"actionType"`
@@ -87,8 +78,8 @@ type JoinGameRequest struct {
 	PlayAsWhite bool   `json:"playAsWhite"`
 }
 
-type MakeMoveRequest struct {
-	GameId     int        `json:"gameId"`
-	UserId     string     `json:"userId"`
-	MaxPlayers *ChessMove `json:"chessMove"`
+type UpdateFenRequest struct {
+	GameId int    `json:"gameId"`
+	UserId string `json:"userId"`
+	NewFen string `json:"newFen"`
 }

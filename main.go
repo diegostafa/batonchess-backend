@@ -7,7 +7,7 @@ const (
 
 func main() {
 	be := NewBatonchessEngine()
-	go BatonChessHttp(http_addr, &be)
-	go BatonChessTcp(tcp_addr, &be)
+	go BatonChessHttp(http_addr, be)
+	go BatonChessTcp(tcp_addr, be)
 	select {}
 }

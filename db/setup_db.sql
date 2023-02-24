@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS games (
     creator_id TEXT NOT NULL,
     fen TEXT NOT NULL,
     max_players INTEGER NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT(STRFTIME('%s', 'NOW')),
+    created_at INTEGER(4) DEFAULT (cast(strftime('%s', 'now') AS INT)),
     CHECK(
         g_state IN (
             'NORMAL',

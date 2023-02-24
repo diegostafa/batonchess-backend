@@ -30,59 +30,71 @@ func onCloseClientClosure(be *BatonchessEngine) func(*tcp_server.Client, error) 
 
 func onMessageClientClosure(be *BatonchessEngine) func(*tcp_server.Client, string) {
 	return func(c *tcp_server.Client, message string) {
-		println("NEW MESSAGE")
+		var (
+			action     BatonchessTcpAction
+			actionBody []byte
+			err        error
+		)
+		err = json.Unmarshal([]byte(message), &action)
+		if err != nil {
+			panic(err)
+		}
 
-		var action BatonchessTcpAction
-		err := json.Unmarshal([]byte(message), &action)
+		actionBody, err = json.Marshal(action.ActionBody)
 		if err != nil {
 			panic(err)
 		}
 
 		switch action.ActionType {
-		case JoinGameAction:
-			joinGameHandler(be, c, action.ActionBody)
-		case MakeMoveAction:
-			makeMoveHandler(be, c, action.ActionBody)
-		}
+		case JOIN_GAME_ACTION:
+			joinGameHandler(be, c, actionBody)
+		case UPDATE_FEN_ACTION:
+			updateFenHandler(be, c, actionBody)
+		case LEAVE_GAME_ACTION:
+			leaveGameHandler(be, c, actionBody)
 
+		}
 	}
 }
 
-func joinGameHandler(be *BatonchessEngine, c *tcp_server.Client, reqData interface{}) {
-	var (
-		reqMap    (map[string]interface{})
-		joinReq   JoinGameRequest
-		player    UserPlayer
-		gameId    GameId
-		gameState *GameState
-	)
-	reqMap = reqData.(map[string]interface{})
-
-	joinReq = JoinGameRequest{
-		GameId:      int(reqMap["gameId"].(float64)),
-		UserId:      reqMap["userId"].(string),
-		UserName:    reqMap["userName"].(string),
-		PlayAsWhite: reqMap["playAsWhite"].(bool),
-	}
-
-	player = UserPlayer{
-		Id:             joinReq.UserId,
-		Name:           joinReq.UserName,
-		PlayingAsWhite: joinReq.PlayAsWhite,
+func joinGameHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte) {
+	var joinReq JoinGameRequest
+	err := json.Unmarshal(jsonReq, &joinReq)
+	if err != nil {
+		panic(err)
 	}
 
 	playerTcp := UserPlayerTcp{
-		ConnId: "",
-		Player: player,
+		ConnId: c.Conn().RemoteAddr().String(),
+		Player: UserPlayer{
+			Id:             joinReq.UserId,
+			Name:           joinReq.UserName,
+			PlayingAsWhite: joinReq.PlayAsWhite,
+		},
 	}
 
-	gameId = GameId{
-		Id: joinReq.GameId,
-	}
-
-	gameState = be.joinGame(&playerTcp, &gameId)
-	jsonBytes, _ := json.Marshal(gameState)
-	c.Send(string(jsonBytes))
+	gameState := be.joinGame(playerTcp, &GameId{Id: joinReq.GameId})
+	gameStateJson, _ := json.Marshal(gameState)
+	c.Send(string(gameStateJson))
 }
 
-func makeMoveHandler(be *BatonchessEngine, c *tcp_server.Client, req interface{}) {}
+func updateFenHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte) {
+	var updateReq UpdateFenRequest
+	err := json.Unmarshal(jsonReq, &updateReq)
+	if err != nil {
+		panic(err)
+	}
+
+	gameState, success := be.updateFen(&updateReq)
+	if !success {
+		c.Send(DISCARDED_MOVE_MESSAGE)
+		return
+	}
+
+	gameStateJson, _ := json.Marshal(*gameState)
+	c.Send(string(gameStateJson))
+}
+
+func leaveGameHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte) {
+	be.leaveGame(&UserPlayerTcp{}, &GameId{})
+}
