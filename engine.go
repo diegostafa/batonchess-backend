@@ -1,7 +1,7 @@
 package main
 
 type BatonchessGame struct {
-	playersTcp  []UserPlayerTcp
+	players     []UserPlayer
 	whiteQueue  []UserPlayer
 	blackQueue  []UserPlayer
 	fen         string
@@ -20,42 +20,42 @@ func NewBatonchessEngine() *BatonchessEngine {
 
 func (be *BatonchessEngine) createGame(gid *GameId) {
 	be.games[gid.Id] = &BatonchessGame{
-		playersTcp:  make([]UserPlayerTcp, 0),
+		players:     make([]UserPlayer, 0),
 		whiteQueue:  make([]UserPlayer, 0),
 		blackQueue:  make([]UserPlayer, 0),
 		fen:         INITIAL_FEN,
 		isWhiteTurn: true}
 }
 
-func (be *BatonchessEngine) joinGame(userTcp UserPlayerTcp, gid *GameId) *GameState {
+func (be *BatonchessEngine) joinGame(player UserPlayer, gid *GameId) *GameState {
 	game := be.games[gid.Id]
-	game.playersTcp = append(game.playersTcp, userTcp)
+	game.players = append(game.players, player)
 
-	if userTcp.Player.PlayingAsWhite {
-		game.whiteQueue = append(game.whiteQueue, userTcp.Player)
+	if player.PlayingAsWhite {
+		game.whiteQueue = append(game.whiteQueue, player)
 	} else {
-		game.blackQueue = append(game.blackQueue, userTcp.Player)
+		game.blackQueue = append(game.blackQueue, player)
 	}
 
 	return be.getGameState(gid)
 }
 
-func (be *BatonchessEngine) leaveGame(userTcp *UserPlayerTcp, gid *GameId) *GameState {
-	game := be.games[gid.Id]
-	for i, p := range game.playersTcp {
-		if p.Player.Id == userTcp.Player.Id {
-			game.playersTcp = append(game.playersTcp[:i], game.playersTcp[i+1:]...)
+func (be *BatonchessEngine) leaveGame(ug *UserInGame) *GameState {
+	game := be.games[ug.GameId]
+	for i, p := range game.players {
+		if p.Id == ug.UserId {
+			game.players = append(game.players[:i], game.players[i+1:]...)
 		}
 	}
 
-	return be.getGameState(gid)
+	return be.getGameState(&GameId{ug.GameId})
 }
 
-func (be *BatonchessEngine) updateFen(updateReq *UpdateFenRequest) (*GameState, bool) {
+func (be *BatonchessEngine) updateFen(updateReq *UpdateFenRequest) *GameState {
 	gameState := be.getGameState(&GameId{Id: updateReq.GameId})
 	gameState.Fen = updateReq.NewFen
 	be.games[updateReq.GameId].isWhiteTurn = !be.games[updateReq.GameId].isWhiteTurn
-	return gameState, true
+	return gameState
 }
 
 func (be *BatonchessEngine) getGameState(gid *GameId) *GameState {
@@ -68,8 +68,8 @@ func (be *BatonchessEngine) getGameState(gid *GameId) *GameState {
 	game = be.games[gid.Id]
 	gameState = &GameState{}
 
-	for i := 0; i < len(game.playersTcp); i++ {
-		players = append(players, *game.playersTcp[i].toUserPlayer())
+	for i := 0; i < len(game.players); i++ {
+		players = append(players, game.players[i])
 	}
 
 	if len(game.whiteQueue) == 0 || len(game.blackQueue) == 0 {

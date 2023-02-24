@@ -6,25 +6,51 @@ import (
 	"github.com/firstrow/tcp_server"
 )
 
+var (
+	conns map[*tcp_server.Client]UserInGame
+)
+
 func BatonChessTcp(addr string, be *BatonchessEngine) {
 	server := tcp_server.New(addr)
+	conns = make(map[*tcp_server.Client]UserInGame)
 
-	server.OnNewClient(onNewClientClosure(be))
+	server.OnNewClient(onNewClient)
 	server.OnClientConnectionClosed(onCloseClientClosure(be))
 	server.OnNewMessage(onMessageClientClosure(be))
-
 	server.Listen()
 }
 
-func onNewClientClosure(be *BatonchessEngine) func(*tcp_server.Client) {
-	return func(c *tcp_server.Client) {
-		println("NEW CLIENT")
+func broadcastGameState(gid *GameId, gameState *GameState) {
+	println("BROADCASTING")
+	var clients []*tcp_server.Client
+	for k, v := range conns {
+		if v.GameId == gid.Id {
+			clients = append(clients, k)
+		}
 	}
+
+	for i, c := range clients {
+		println("BROADCASTING: ", i)
+
+		gameStateJson, _ := json.Marshal(*gameState)
+		c.Send(string(gameStateJson))
+	}
+
+}
+
+func onNewClient(c *tcp_server.Client) {
+	println("NEW CLIENT")
 }
 
 func onCloseClientClosure(be *BatonchessEngine) func(*tcp_server.Client, error) {
 	return func(c *tcp_server.Client, err error) {
-		println("CLOSE CLIENT")
+		ug := conns[c]
+		gameState := be.leaveGame(&ug)
+		if gameState == nil {
+			return
+		}
+
+		broadcastGameState(&GameId{ug.GameId}, gameState)
 	}
 }
 
@@ -47,12 +73,11 @@ func onMessageClientClosure(be *BatonchessEngine) func(*tcp_server.Client, strin
 
 		switch action.ActionType {
 		case JOIN_GAME_ACTION:
+			println("JOIN GAME")
 			joinGameHandler(be, c, actionBody)
 		case UPDATE_FEN_ACTION:
+			println("UPDATE FEN")
 			updateFenHandler(be, c, actionBody)
-		case LEAVE_GAME_ACTION:
-			leaveGameHandler(be, c, actionBody)
-
 		}
 	}
 }
@@ -64,18 +89,21 @@ func joinGameHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte)
 		panic(err)
 	}
 
-	playerTcp := UserPlayerTcp{
-		ConnId: c.Conn().RemoteAddr().String(),
-		Player: UserPlayer{
-			Id:             joinReq.UserId,
-			Name:           joinReq.UserName,
-			PlayingAsWhite: joinReq.PlayAsWhite,
-		},
+	player := UserPlayer{
+		Id:             joinReq.UserId,
+		Name:           joinReq.UserName,
+		PlayingAsWhite: joinReq.PlayAsWhite,
 	}
 
-	gameState := be.joinGame(playerTcp, &GameId{Id: joinReq.GameId})
-	gameStateJson, _ := json.Marshal(gameState)
-	c.Send(string(gameStateJson))
+	gameState := be.joinGame(player, &GameId{Id: joinReq.GameId})
+	if gameState == nil {
+		println("JOIN REFUSED")
+		c.Send(REFUSED_ACTION)
+		return
+	}
+
+	conns[c] = UserInGame{UserId: joinReq.UserId, GameId: joinReq.GameId}
+	broadcastGameState(&GameId{joinReq.GameId}, gameState)
 }
 
 func updateFenHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte) {
@@ -85,16 +113,11 @@ func updateFenHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte
 		panic(err)
 	}
 
-	gameState, success := be.updateFen(&updateReq)
-	if !success {
-		c.Send(DISCARDED_MOVE_MESSAGE)
+	gameState := be.updateFen(&updateReq)
+	if gameState == nil {
+		c.Send(REFUSED_ACTION)
 		return
 	}
 
-	gameStateJson, _ := json.Marshal(*gameState)
-	c.Send(string(gameStateJson))
-}
-
-func leaveGameHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte) {
-	be.leaveGame(&UserPlayerTcp{}, &GameId{})
+	broadcastGameState(&GameId{updateReq.GameId}, gameState)
 }

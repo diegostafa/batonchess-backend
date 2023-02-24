@@ -1,11 +1,10 @@
 package main
 
 const (
-	JOIN_GAME_ACTION       = "JOIN_GAME"
-	LEAVE_GAME_ACTION      = "LEAVE_GAME"
-	UPDATE_FEN_ACTION      = "UPDATE_FEN"
-	DISCARDED_MOVE_MESSAGE = "DISCARDED"
-	INITIAL_FEN            = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+	JOIN_GAME_ACTION  = "JOIN_GAME"
+	UPDATE_FEN_ACTION = "UPDATE_FEN"
+	REFUSED_ACTION    = "REFUSED"
+	INITIAL_FEN       = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 )
 
 // --- HTTP SERVER
@@ -25,13 +24,9 @@ type UserPlayer struct {
 	PlayingAsWhite bool   `json:"playingAsWhite"`
 }
 
-type UserPlayerTcp struct {
-	ConnId string     `json:"connId"`
-	Player UserPlayer `json:"player"`
-}
-
-func (upt *UserPlayerTcp) toUserPlayer() *UserPlayer {
-	return &upt.Player
+type UserInGame struct {
+	UserId string `json:"userId"`
+	GameId int    `json:"gameId"`
 }
 
 type UpdateUsernameRequest struct {
