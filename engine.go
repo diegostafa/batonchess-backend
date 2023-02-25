@@ -47,7 +47,6 @@ func (be *BatonchessEngine) leaveGame(ug *UserInGame) *GameState {
 			game.players = append(game.players[:i], game.players[i+1:]...)
 		}
 	}
-
 	return be.getGameState(&GameId{ug.GameId})
 }
 
