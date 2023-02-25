@@ -21,7 +21,6 @@ func BatonChessTcp(addr string, be *BatonchessEngine) {
 
 func onMessageClientClosure(be *BatonchessEngine) func(*tcp_server.Client, string) {
 	return func(c *tcp_server.Client, message string) {
-		println("ON NEW MESSAGE")
 		var (
 			action     BatonchessTcpAction
 			actionBody []byte
@@ -51,21 +50,17 @@ func onMessageClientClosure(be *BatonchessEngine) func(*tcp_server.Client, strin
 
 func onCloseClientClosure(be *BatonchessEngine) func(*tcp_server.Client, error) {
 	return func(c *tcp_server.Client, err error) {
-		println("ON CLOSE CLIENT")
 		if err != nil {
-			println("CLOSE ERR:", err.Error())
+			println(err.Error())
 		}
 
 		ug := userOfClient[c]
 		if ug == nil {
-			broadcastGameState(nil, nil)
-			println("NO USER OF CLIENT")
 			return
 		}
 
 		gameState := be.leaveGame(ug)
 		if gameState == nil {
-			println("NO GAME STATE")
 			return
 		}
 
@@ -75,7 +70,6 @@ func onCloseClientClosure(be *BatonchessEngine) func(*tcp_server.Client, error) 
 }
 
 func broadcastGameState(gid *GameId, gameState *GameState) {
-	println("BROADCASTING NEW GAME STATE")
 	if gid == nil || gameState == nil {
 		return
 	}

@@ -42,46 +42,54 @@ func (be *BatonchessEngine) joinGame(player UserPlayer, gid *GameId) *GameState 
 
 func (be *BatonchessEngine) leaveGame(ug *UserInGame) *GameState {
 	game := be.games[ug.GameId]
+
 	for i, p := range game.players {
-		if p.Id == ug.UserId {
+		if p.Id == ug.UserId && i >= 0 && i < len(game.players) {
 			game.players = append(game.players[:i], game.players[i+1:]...)
 		}
 	}
+
 	return be.getGameState(&GameId{ug.GameId})
 }
 
 func (be *BatonchessEngine) updateFen(updateReq *UpdateFenRequest) *GameState {
-	gameState := be.getGameState(&GameId{Id: updateReq.GameId})
-	gameState.Fen = updateReq.NewFen
-	be.games[updateReq.GameId].isWhiteTurn = !be.games[updateReq.GameId].isWhiteTurn
+	game := be.games[updateReq.GameId]
+	gameState := be.getGameState(&GameId{updateReq.GameId})
+
+	if gameState.WaitingForPlayers {
+		return nil
+	}
+
+	if gameState.UserToPlay.Id != updateReq.UserId {
+		return nil
+	}
+
+	if gameState.UserToPlay.PlayingAsWhite {
+		game.whiteQueue = append(game.whiteQueue[1:], game.whiteQueue[0])
+	} else {
+		game.whiteQueue = append(game.whiteQueue[1:], game.whiteQueue[0])
+	}
+
+	game.fen = updateReq.NewFen
+	gameState.Fen = game.fen
+	game.isWhiteTurn = !game.isWhiteTurn
+
 	return gameState
 }
 
 func (be *BatonchessEngine) getGameState(gid *GameId) *GameState {
-	var (
-		gameState *GameState
-		game      *BatonchessGame
-		players   []UserPlayer
-	)
-
-	game = be.games[gid.Id]
-	gameState = &GameState{}
-
-	for i := 0; i < len(game.players); i++ {
-		players = append(players, game.players[i])
-	}
+	game := be.games[gid.Id]
+	gameState := &GameState{}
+	gameState.Players = game.players
+	gameState.Fen = game.fen
 
 	if len(game.whiteQueue) == 0 || len(game.blackQueue) == 0 {
 		gameState.WaitingForPlayers = true
 	} else if game.isWhiteTurn {
 		gameState.UserToPlay = game.whiteQueue[0]
-		game.whiteQueue = append(game.whiteQueue[1:], game.whiteQueue[0])
 	} else {
 		gameState.UserToPlay = game.blackQueue[0]
-		game.blackQueue = append(game.blackQueue[1:], game.blackQueue[0])
 	}
 
-	gameState.Players = players
-	gameState.Fen = game.fen
 	return gameState
 }

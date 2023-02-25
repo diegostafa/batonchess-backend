@@ -7,8 +7,6 @@ const (
 	INITIAL_FEN       = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 )
 
-// --- HTTP SERVER
-
 type UserId struct {
 	Id string `json:"id"`
 }
@@ -58,8 +56,6 @@ type GameInfo struct {
 	MaxPlayers     int    `json:"maxPlayers"`
 	CurrentPlayers int    `json:"currentPlayers"`
 }
-
-// --- TCP SERVER
 
 type BatonchessTcpAction struct {
 	ActionType string      `json:"actionType"`
