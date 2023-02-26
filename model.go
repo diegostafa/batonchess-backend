@@ -50,6 +50,7 @@ type CreateGameRequest struct {
 
 type GameInfo struct {
 	GameId         int    `json:"gameId"`
+	CreatorId      string `json:"creatorId"`
 	CreatorName    string `json:"creatorName"`
 	GameStatus     string `json:"gameStatus"`
 	CreatedAt      int    `json:"createdAt"`

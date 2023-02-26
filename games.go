@@ -26,6 +26,7 @@ func CreateGame(gp *CreateGameRequest) (*GameInfo, error) {
 		func(row *sql.Row) error {
 			return row.Scan(
 				&gameInfo.GameId,
+				&gameInfo.CreatorId,
 				&gameInfo.CreatorName,
 				&gameInfo.GameStatus,
 				&gameInfo.CreatedAt,
@@ -34,6 +35,7 @@ func CreateGame(gp *CreateGameRequest) (*GameInfo, error) {
 		`
 		SELECT
 			g_id,
+			u_id,
 			u_name,
 			g_state,
 			created_at,
@@ -65,6 +67,7 @@ func GetActiveGames() ([]GameInfo, error) {
 			for rows.Next() {
 				err := rows.Scan(
 					&g.GameId,
+					&g.CreatorId,
 					&g.CreatorName,
 					&g.GameStatus,
 					&g.CreatedAt,
@@ -79,6 +82,7 @@ func GetActiveGames() ([]GameInfo, error) {
 		`
 		SELECT
 			g_id,
+			u_id,
 			u_name,
 			g_state,
 			created_at,
