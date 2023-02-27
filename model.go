@@ -20,6 +20,7 @@ type UserPlayer struct {
 	Id             string `json:"id"`
 	Name           string `json:"name"`
 	PlayingAsWhite bool   `json:"playingAsWhite"`
+	JoinedAt       int64  `json:"joinedAt"`
 }
 
 type UserInGame struct {
@@ -42,7 +43,8 @@ type GameState struct {
 	BlackQueue        []UserPlayer `json:"blackQueue"`
 	UserToPlay        UserPlayer   `json:"userToPlay"`
 	WaitingForPlayers bool         `json:"waitingForPlayers"`
-	BoardState        string       `json:"boardState"`
+	Outcome           string       `json:"outcome"`
+	Method            int          `json:"method"`
 }
 
 type CreateGameRequest struct {
@@ -54,8 +56,7 @@ type GameInfo struct {
 	GameId         int    `json:"gameId"`
 	CreatorId      string `json:"creatorId"`
 	CreatorName    string `json:"creatorName"`
-	GameStatus     string `json:"gameStatus"`
-	CreatedAt      int    `json:"createdAt"`
+	CreatedAt      int64  `json:"createdAt"`
 	MaxPlayers     int    `json:"maxPlayers"`
 	CurrentPlayers int    `json:"currentPlayers"`
 }

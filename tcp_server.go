@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/firstrow/tcp_server"
 )
@@ -96,6 +97,7 @@ func joinGameHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte)
 		Id:             joinReq.UserId,
 		Name:           joinReq.UserName,
 		PlayingAsWhite: joinReq.PlayAsWhite,
+		JoinedAt:       time.Now().Unix(),
 	}
 
 	gameId := &GameId{Id: joinReq.GameId}
@@ -117,7 +119,12 @@ func updateFenHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte
 		return
 	}
 
-	be.updateFen(&updateReq)
-	gameState := be.getGameState(&GameId{Id: updateReq.GameId})
+	gid := &GameId{Id: updateReq.GameId}
+	be.updateGame(&updateReq)
+	gameState := be.getGameState(gid)
+	if gameState.Outcome != "*" {
+		UpdateGameState(gid, gameState)
+		delete(be.games, gid.Id)
+	}
 	broadcastGameState(&GameId{updateReq.GameId}, gameState)
 }

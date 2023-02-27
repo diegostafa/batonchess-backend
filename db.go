@@ -105,3 +105,139 @@ func queryMany(scanner func(*sql.Rows) error, queryString string, queryArgs ...a
 
 	return scanned
 }
+
+func GetUser(u *UserId) (*User, error) {
+	var (
+		user User
+		err  error
+	)
+	err = queryOne(
+		func(row *sql.Row) error {
+			return row.Scan(&user.Id, &user.Name)
+		}, `
+		SELECT *
+		FROM users
+		WHERE u_id = ?`,
+		u.Id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func CreateUser(user *User) error {
+	return queryNone(`
+		INSERT INTO users(u_id, u_name)
+		VALUES (?, ?)`,
+		user.Id, user.Name)
+}
+
+func UpdateUserName(updateInfo *UpdateUsernameRequest) error {
+	return queryNone(`
+		UPDATE users
+		SET u_name = ?
+		WHERE u_id = ?`,
+		updateInfo.NewName, updateInfo.Id,
+	)
+}
+
+func CreateGame(gp *CreateGameRequest) (*GameInfo, error) {
+	var (
+		gameInfo GameInfo
+		err      error
+	)
+
+	err = queryNone(`
+		INSERT INTO games(creator_id,max_players,fen)
+		VALUES (?,?,?)`,
+		gp.CreatorId, gp.MaxPlayers, INITIAL_FEN)
+
+	if err != nil {
+		println(err.Error())
+		return nil, err
+	}
+
+	err = queryOne(
+		func(row *sql.Row) error {
+			return row.Scan(
+				&gameInfo.GameId,
+				&gameInfo.CreatorId,
+				&gameInfo.CreatorName,
+				&gameInfo.CreatedAt,
+				&gameInfo.MaxPlayers)
+		},
+		`
+		SELECT
+			g_id,
+			u_id,
+			u_name,
+			created_at,
+			max_players
+		FROM games JOIN users
+		ON games.creator_id = users.u_id
+		WHERE creator_id = ?
+		ORDER BY created_at DESC
+		LIMIT 1`,
+		gp.CreatorId)
+
+	if err != nil {
+		println(err.Error())
+		return nil, err
+	}
+
+	return &gameInfo, nil
+}
+
+func GetActiveGames() ([]GameInfo, error) {
+	var (
+		gameInfos []GameInfo
+		g         GameInfo
+		err       error
+	)
+
+	err = queryMany(
+		func(rows *sql.Rows) error {
+			for rows.Next() {
+				err := rows.Scan(
+					&g.GameId,
+					&g.CreatorId,
+					&g.CreatorName,
+					&g.CreatedAt,
+					&g.MaxPlayers)
+				if err != nil {
+					return err
+				}
+				gameInfos = append(gameInfos, g)
+			}
+			return nil
+		},
+		`
+		SELECT
+			g_id,
+			u_id,
+			u_name,
+			created_at,
+			max_players
+		FROM games JOIN users
+		ON games.creator_id = users.u_id
+		WHERE outcome = "*"
+		ORDER BY created_at DESC`)
+
+	if err != nil {
+		println(err.Error())
+		return nil, err
+	}
+
+	return gameInfos, nil
+}
+
+func UpdateGameState(gid *GameId, gameState *GameState) error {
+	return queryNone(`
+		UPDATE games
+		SET outcome = ?, method = ?
+		WHERE g_id = ?`,
+		gameState.Outcome, gameState.Method, gid.Id,
+	)
+}

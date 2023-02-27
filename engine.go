@@ -1,6 +1,8 @@
 package main
 
-import "github.com/notnil/chess"
+import (
+	"github.com/notnil/chess"
+)
 
 type BatonchessGame struct {
 	maxPlayers  int
@@ -59,7 +61,7 @@ func (be *BatonchessEngine) leaveGame(ug *UserInGame) {
 	}
 }
 
-func (be *BatonchessEngine) updateFen(updateReq *UpdateFenRequest) {
+func (be *BatonchessEngine) updateGame(updateReq *UpdateFenRequest) {
 	game := be.games[updateReq.GameId]
 	gameState := be.getGameState(&GameId{updateReq.GameId})
 
@@ -91,7 +93,8 @@ func (be *BatonchessEngine) getGameState(gid *GameId) *GameState {
 	gameState.Fen = game.fen
 	gameState.WhiteQueue = game.whiteQueue
 	gameState.BlackQueue = game.blackQueue
-	gameState.BoardState = getChessboardState(game.fen)
+
+	gameState.Outcome, gameState.Method = getChessboardState(game.fen)
 
 	if len(game.whiteQueue) == 0 || len(game.blackQueue) == 0 {
 		gameState.WaitingForPlayers = true
@@ -127,10 +130,12 @@ func isValidNewPosition(currFenStr string, nextFenStr string) bool {
 	return false
 }
 
-func getChessboardState(fenStr string) string {
+func getChessboardState(fenStr string) (string, int) {
 	fen, _ := chess.FEN(fenStr)
 	game := chess.NewGame(fen)
-	return game.Position().Status().String()
+	outcome := game.Outcome().String()
+	method := game.Method()
+	return outcome, int(method)
 }
 
 func (be *BatonchessEngine) getCurrentPlayers(gid *GameId) int {

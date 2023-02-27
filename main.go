@@ -1,8 +1,8 @@
 package main
 
 const (
-	http_addr = "localhost:2023"
-	tcp_addr  = "localhost:2024"
+	http_addr = "192.168.1.100:2023"
+	tcp_addr  = "192.168.1.100:2024"
 )
 
 func main() {

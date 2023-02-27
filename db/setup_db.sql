@@ -5,19 +5,11 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS games (
     g_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    g_state TEXT NOT NULL DEFAULT 'NORMAL',
     creator_id TEXT NOT NULL,
     fen TEXT NOT NULL,
     max_players INTEGER NOT NULL,
     created_at INTEGER(4) DEFAULT (cast(strftime('%s', 'now') AS INT)),
-    CHECK(
-        g_state IN (
-            'NORMAL',
-            'CHECKMATE',
-            'STALEMATE',
-            'REPETITION',
-            'INSUFF'
-        )
-    ),
+    outcome TEXT DEFAULT "*",
+    method INTEGER,
     FOREIGN KEY (creator_id) REFERENCES users(u_id)
 );
