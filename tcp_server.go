@@ -59,11 +59,8 @@ func onCloseClientClosure(be *BatonchessEngine) func(*tcp_server.Client, error) 
 			return
 		}
 
-		gameState := be.leaveGame(ug)
-		if gameState == nil {
-			return
-		}
-
+		be.leaveGame(ug)
+		gameState := be.getGameState(&GameId{Id: ug.GameId})
 		delete(userOfClient, c)
 		broadcastGameState(&GameId{ug.GameId}, gameState)
 	}
@@ -101,12 +98,13 @@ func joinGameHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte)
 		PlayingAsWhite: joinReq.PlayAsWhite,
 	}
 
-	gameState := be.joinGame(player, &GameId{Id: joinReq.GameId})
-	if gameState == nil {
+	gameId := &GameId{Id: joinReq.GameId}
+	if !be.joinGame(player, gameId) {
 		c.Send(REFUSED_ACTION)
 		return
 	}
 
+	gameState := be.getGameState(gameId)
 	userOfClient[c] = &UserInGame{UserId: joinReq.UserId, GameId: joinReq.GameId}
 	broadcastGameState(&GameId{joinReq.GameId}, gameState)
 }
@@ -119,11 +117,7 @@ func updateFenHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte
 		return
 	}
 
-	gameState := be.updateFen(&updateReq)
-	if gameState == nil {
-		c.Send(REFUSED_ACTION)
-		return
-	}
-
+	be.updateFen(&updateReq)
+	gameState := be.getGameState(&GameId{Id: updateReq.GameId})
 	broadcastGameState(&GameId{updateReq.GameId}, gameState)
 }

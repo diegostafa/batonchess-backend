@@ -38,9 +38,11 @@ type GameId struct {
 
 type GameState struct {
 	Fen               string       `json:"fen"`
-	Players           []UserPlayer `json:"players"`
+	WhiteQueue        []UserPlayer `json:"whiteQueue"`
+	BlackQueue        []UserPlayer `json:"blackQueue"`
 	UserToPlay        UserPlayer   `json:"userToPlay"`
 	WaitingForPlayers bool         `json:"waitingForPlayers"`
+	BoardState        string       `json:"boardState"`
 }
 
 type CreateGameRequest struct {

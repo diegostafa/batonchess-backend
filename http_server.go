@@ -96,7 +96,7 @@ func getActiveGamesClosure(be *BatonchessEngine) func(*gin.Context) {
 		gamesInMemory := make([]GameInfo, 0, len(gameInfos))
 		for _, value := range gameInfos {
 			if _, ok := be.games[value.GameId]; ok {
-				currPlayers := len(be.games[value.GameId].players)
+				currPlayers := be.getCurrentPlayers(&GameId{Id: value.GameId})
 				value.CurrentPlayers = currPlayers
 				gamesInMemory = append(gamesInMemory, value)
 			}
@@ -126,10 +126,8 @@ func createGameClosure(be *BatonchessEngine) func(*gin.Context) {
 			return
 		}
 
-		gid := &GameId{Id: gameInfo.GameId}
-		be.createGame(gid)
-		gameInfo.CurrentPlayers = len(be.games[gid.Id].players)
-
+		be.createGame(gameInfo)
+		gameInfo.CurrentPlayers = be.getCurrentPlayers(&GameId{Id: gameInfo.GameId})
 		c.JSON(http.StatusCreated, gameInfo)
 	}
 }

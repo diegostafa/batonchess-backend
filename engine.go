@@ -1,7 +1,9 @@
 package main
 
+import "github.com/notnil/chess"
+
 type BatonchessGame struct {
-	players     []UserPlayer
+	maxPlayers  int
 	whiteQueue  []UserPlayer
 	blackQueue  []UserPlayer
 	fen         string
@@ -18,50 +20,59 @@ func NewBatonchessEngine() *BatonchessEngine {
 	}
 }
 
-func (be *BatonchessEngine) createGame(gid *GameId) {
-	be.games[gid.Id] = &BatonchessGame{
-		players:     make([]UserPlayer, 0),
+func (be *BatonchessEngine) createGame(gameInfo *GameInfo) {
+	be.games[gameInfo.GameId] = &BatonchessGame{
+		maxPlayers:  gameInfo.MaxPlayers,
 		whiteQueue:  make([]UserPlayer, 0),
 		blackQueue:  make([]UserPlayer, 0),
 		fen:         INITIAL_FEN,
 		isWhiteTurn: true}
 }
 
-func (be *BatonchessEngine) joinGame(player UserPlayer, gid *GameId) *GameState {
+func (be *BatonchessEngine) joinGame(player UserPlayer, gid *GameId) bool {
 	game := be.games[gid.Id]
-	game.players = append(game.players, player)
 
-	if player.PlayingAsWhite {
+	if be.getCurrentPlayers(gid) == game.maxPlayers {
+		return false
+	} else if player.PlayingAsWhite {
 		game.whiteQueue = append(game.whiteQueue, player)
 	} else {
 		game.blackQueue = append(game.blackQueue, player)
 	}
 
-	return be.getGameState(gid)
+	return true
 }
 
-func (be *BatonchessEngine) leaveGame(ug *UserInGame) *GameState {
+func (be *BatonchessEngine) leaveGame(ug *UserInGame) {
 	game := be.games[ug.GameId]
 
-	for i, p := range game.players {
-		if p.Id == ug.UserId && i >= 0 && i < len(game.players) {
-			game.players = append(game.players[:i], game.players[i+1:]...)
+	for i, p := range game.whiteQueue {
+		if p.Id == ug.UserId && i >= 0 && i < len(game.whiteQueue) {
+			game.whiteQueue = append(game.whiteQueue[:i], game.whiteQueue[i+1:]...)
 		}
 	}
 
-	return be.getGameState(&GameId{ug.GameId})
+	for i, p := range game.blackQueue {
+		if p.Id == ug.UserId && i >= 0 && i < len(game.blackQueue) {
+			game.blackQueue = append(game.blackQueue[:i], game.blackQueue[i+1:]...)
+		}
+	}
 }
 
-func (be *BatonchessEngine) updateFen(updateReq *UpdateFenRequest) *GameState {
+func (be *BatonchessEngine) updateFen(updateReq *UpdateFenRequest) {
 	game := be.games[updateReq.GameId]
 	gameState := be.getGameState(&GameId{updateReq.GameId})
 
 	if gameState.WaitingForPlayers {
-		return nil
+		return
 	}
 
 	if gameState.UserToPlay.Id != updateReq.UserId {
-		return nil
+		return
+	}
+
+	if !isValidNewPosition(game.fen, updateReq.NewFen) {
+		return
 	}
 
 	if gameState.UserToPlay.PlayingAsWhite {
@@ -71,17 +82,16 @@ func (be *BatonchessEngine) updateFen(updateReq *UpdateFenRequest) *GameState {
 	}
 
 	game.fen = updateReq.NewFen
-	gameState.Fen = game.fen
 	game.isWhiteTurn = !game.isWhiteTurn
-
-	return gameState
 }
 
 func (be *BatonchessEngine) getGameState(gid *GameId) *GameState {
 	game := be.games[gid.Id]
 	gameState := &GameState{}
-	gameState.Players = game.players
 	gameState.Fen = game.fen
+	gameState.WhiteQueue = game.whiteQueue
+	gameState.BlackQueue = game.blackQueue
+	gameState.BoardState = getChessboardState(game.fen)
 
 	if len(game.whiteQueue) == 0 || len(game.blackQueue) == 0 {
 		gameState.WaitingForPlayers = true
@@ -92,4 +102,38 @@ func (be *BatonchessEngine) getGameState(gid *GameId) *GameState {
 	}
 
 	return gameState
+}
+
+func isValidNewPosition(currFenStr string, nextFenStr string) bool {
+	currFen, err := chess.FEN(currFenStr)
+	if err != nil {
+		return false
+	}
+
+	_, err = chess.FEN(nextFenStr)
+	if err != nil {
+		return false
+	}
+
+	currGame := *chess.NewGame(currFen)
+	validMoves := currGame.ValidMoves()
+
+	for _, move := range validMoves {
+		if currGame.Position().Update(move).String() == nextFenStr {
+			return true
+		}
+	}
+
+	return false
+}
+
+func getChessboardState(fenStr string) string {
+	fen, _ := chess.FEN(fenStr)
+	game := chess.NewGame(fen)
+	return game.Position().Status().String()
+}
+
+func (be *BatonchessEngine) getCurrentPlayers(gid *GameId) int {
+	game := be.games[gid.Id]
+	return len(game.whiteQueue) + len(game.blackQueue)
 }
