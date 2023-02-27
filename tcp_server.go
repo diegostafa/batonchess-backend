@@ -61,7 +61,12 @@ func onCloseClientClosure(be *BatonchessEngine) func(*tcp_server.Client, error) 
 		}
 
 		be.leaveGame(ug)
-		gameState := be.getGameState(&GameId{Id: ug.GameId})
+
+		gid := &GameId{Id: ug.GameId}
+		gameState := be.getGameState(gid)
+		if gameState.Outcome != "*" && be.getCurrentPlayers(gid) == 0 {
+			delete(be.games, gid.Id)
+		}
 		delete(userOfClient, c)
 		broadcastGameState(&GameId{ug.GameId}, gameState)
 	}
@@ -124,7 +129,6 @@ func updateFenHandler(be *BatonchessEngine, c *tcp_server.Client, jsonReq []byte
 	gameState := be.getGameState(gid)
 	if gameState.Outcome != "*" {
 		UpdateGameState(gid, gameState)
-		delete(be.games, gid.Id)
 	}
 	broadcastGameState(&GameId{updateReq.GameId}, gameState)
 }
