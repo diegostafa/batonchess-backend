@@ -34,11 +34,15 @@ func (be *BatonchessEngine) createGame(gameInfo *GameInfo) {
 func (be *BatonchessEngine) joinGame(player UserPlayer, gid *GameId) bool {
 	game := be.games[gid.Id]
 
-	if be.getCurrentPlayers(gid) == game.maxPlayers {
-		return false
-	} else if player.PlayingAsWhite {
+	if player.PlayingAsWhite {
+		if len(game.whiteQueue) == game.maxPlayers {
+			return false
+		}
 		game.whiteQueue = append(game.whiteQueue, player)
 	} else {
+		if len(game.blackQueue) == game.maxPlayers {
+			return false
+		}
 		game.blackQueue = append(game.blackQueue, player)
 	}
 
@@ -49,14 +53,16 @@ func (be *BatonchessEngine) leaveGame(ug *UserInGame) {
 	game := be.games[ug.GameId]
 
 	for i, p := range game.whiteQueue {
-		if p.Id == ug.UserId && i >= 0 && i < len(game.whiteQueue) {
+		if p.Id == ug.UserId {
 			game.whiteQueue = append(game.whiteQueue[:i], game.whiteQueue[i+1:]...)
+			return
 		}
 	}
 
 	for i, p := range game.blackQueue {
-		if p.Id == ug.UserId && i >= 0 && i < len(game.blackQueue) {
+		if p.Id == ug.UserId {
 			game.blackQueue = append(game.blackQueue[:i], game.blackQueue[i+1:]...)
+			return
 		}
 	}
 }
@@ -93,7 +99,6 @@ func (be *BatonchessEngine) getGameState(gid *GameId) *GameState {
 	gameState.Fen = game.fen
 	gameState.WhiteQueue = game.whiteQueue
 	gameState.BlackQueue = game.blackQueue
-
 	gameState.Outcome, gameState.Method = getChessboardState(game.fen)
 
 	if len(game.whiteQueue) == 0 || len(game.blackQueue) == 0 {
@@ -134,8 +139,8 @@ func getChessboardState(fenStr string) (string, int) {
 	fen, _ := chess.FEN(fenStr)
 	game := chess.NewGame(fen)
 	outcome := game.Outcome().String()
-	method := game.Method()
-	return outcome, int(method)
+	method := int(game.Method())
+	return outcome, method
 }
 
 func (be *BatonchessEngine) getCurrentPlayers(gid *GameId) int {
